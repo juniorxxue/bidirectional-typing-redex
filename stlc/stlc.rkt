@@ -7,11 +7,7 @@
   (tau ::= bool (tau -> tau))
   (Gamma ::= ((x tau) ...))
   (v ::= true false (lambda (x : tau) e))
-  (E ::=
-     hole
-     (v E)
-     (E e)
-     (if E then e else e))
+  (E ::= hole (E e) (v E) (if E then e else e))
   #:binding-forms
   (lambda (x : tau) e #:refers-to x)
   )
@@ -74,7 +70,7 @@
 (define r
   (reduction-relation
    L
-   (--> ((lambda (x : tau) e) v) (substitute e x v) "beta")
+   (--> ((lambda (x : tau) e_1) v) (substitute e_1 x v) "beta")
    (--> (if true then e_1 else e_2) e_1 "if-t")
    (--> (if false then e_1 else e_2) e_2 "if-f")))
 
@@ -91,9 +87,17 @@
 ;;                         (if true then true else false)))))
 
 ;; right here problems has happened, weneed to determine which side should be evaluted first
-(define -->n (context-closure r L E))
+(define -->n (context-closure r L E)) ;; evaluation context rocks
 
-(traces -->n (term ((lambda (x : bool) x)
-                    (if (if true then true else false) then
-                        (if true then true else false) else
-                        (if true then true else false)))))
+;; (traces -->n (term ((lambda (x : bool) x)
+;;                     (if (if true then true else false) then
+;;                         (if true then true else false) else
+;;                         (if true then true else false)))))
+
+;; all value is expression
+(redex-check L v (redex-match? L e (term v)) #:attempts 1000)
+
+;; (redex-match L (in-hole E e) (term ((lambda (x : bool) x)
+;;                                     (if (if true then true else false) then
+;;                                         (if true then true else false) else
+;;                                         (if true then true else false)))))

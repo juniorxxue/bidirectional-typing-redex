@@ -1,2 +1,2 @@
-stlc/ : simply typed lambda calculus
+stlc/ : simply call-by-value typed lambda calculus
 system-f/ : system f
