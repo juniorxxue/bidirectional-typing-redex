@@ -7,6 +7,11 @@
   (tau ::= bool (tau -> tau))
   (Gamma ::= ((x tau) ...))
   (v ::= true false (lambda (x : tau) e))
+  (E ::=
+     hole
+     (v E)
+     (E e)
+     (if E then e else e))
   #:binding-forms
   (lambda (x : tau) e #:refers-to x)
   )
@@ -65,3 +70,30 @@
 (test-equal (judgment-holds (typeof ((y bool)) y : tau) tau) (list (term bool)))
 
 ;; (show-derivations (build-derivations (typeof ((y bool)) y : bool)))
+
+(define r
+  (reduction-relation
+   L
+   (--> ((lambda (x : tau) e) v) (substitute e x v) "beta")
+   (--> (if true then e_1 else e_2) e_1 "if-t")
+   (--> (if false then e_1 else e_2) e_2 "if-f")))
+
+;; reducation relation can be thought as a judgment with #:mode (r I O)
+
+
+(define -->r (compatible-closure r L e))
+
+;; (traces -->r (term ((lambda (x : bool) x) (if true then true else false))))
+
+;; (traces -->r (term ((lambda (x : bool) x)
+;;                     (if (if true then true else false) then
+;;                         (if true then true else false) else
+;;                         (if true then true else false)))))
+
+;; right here problems has happened, weneed to determine which side should be evaluted first
+(define -->n (context-closure r L E))
+
+(traces -->n (term ((lambda (x : bool) x)
+                    (if (if true then true else false) then
+                        (if true then true else false) else
+                        (if true then true else false)))))
