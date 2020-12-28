@@ -1,2 +1,4 @@
 stlc/ : simply call-by-value typed lambda calculus
 system-f/ : system f
+bidir-typing/ : stlc with bidirectional typing
+locally-nameless/ : stlc with locally nameless binding
