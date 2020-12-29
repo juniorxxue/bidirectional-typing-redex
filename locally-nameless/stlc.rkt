@@ -42,10 +42,56 @@
   open-term : e e -> e
   [(open-term e_1 e_2) (open-rec 0 e_2 e_1)])
 
-
-(term (open-term ((lambda base (1 0)) 0) Y))
-
 (test-equal (term (open-term ((lambda base (1 0)) 0) Y)) (term ((lambda base (Y 0)) Y)))
 
 
 ;; ---- Local Closure ----
+
+(define-metafunction L
+  fv-rec : e (x ...) -> (x ...)
+  [(fv-rec number (x ...)) ()]
+  [(fv-rec x_1 (x_2 ...)) (x_1)]
+  [(fv-rec (lambda tau e_1) (x_1 ...)) (fv-rec e_1 (x_1 ...))]
+  [(fv-rec (e_1 e_2) (x ...)) ,(append (term (fv-rec e_1 (x ...)))
+                                     (term (fv-rec e_2 (x ...))))])
+
+;; compute the list of free variables in a term
+(define-metafunction L
+  fv : e -> (x ...)
+  [(fv e) ,(remove-duplicates (term (fv-rec e ())))])
+
+(test-equal (term (fv ((lambda base Y) (lambda base Y)))) '(Y))
+
+
+;; (define-metafunction L
+;;   not-in : any (any ...) -> boolean
+;;   [(not-in any_1 (_ ... any_1 _ ...)) #f]
+;;   [(not-in _ _) #t]
+;;   )
+
+(define-judgment-form L
+  #:mode (not-in I I)
+  #:contract (not-in any (any ...))
+  [(not-in any_1 (_ ... any_1 _ ...))]
+  )
+
+(define-judgment-form L
+  #:mode (lc I)
+  #:contract (lc e)
+  [--------------- "lc-var"
+   (lc x)]
+  ;; [(not-in x (fv e))
+  ;;  (lc (open-term e x))
+  ;;  ----------------- "lc-abs"
+  ;;  (lc (lambda tau e))]
+
+  ;; I need to make this rule algorithmic
+
+  [(lc (open-term e NEVER))
+   ------------------------- "lc-abs"
+   (lc (lambda tau e))]
+  [(lc e_1)
+   (lc e_2)
+   ------------------ "lc-app"
+   (lc (e_1 e_2))]
+  )
